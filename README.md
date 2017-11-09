@@ -15,19 +15,22 @@ host: localhost      # es host
 port: 9200          # es port
 username: elastic   # es username
 password: changeme  # es password
+api:
+  enable: true
+  port: 3131
+  basic_auth:
+    enable: true
+    username: admin
+    password: 123456
 mail:
-  username: fuyi@23mofang.com
-  password: xxxxxxxxxx
-  smtp_host: smtp.exmail.qq.com
+  username: fudali4test@163.com
+  password: 1234567890abc
+  smtp_host: smtp.163.com
   smtp_port: 25
   send_to:
     - fuyi@23mofang.com
-#    - yuxiaobo@23mofang.com
-  from_addr: fuyi@23mofang.com             # 显示发送出去的用户是谁
-  reply_to: fuyi@23mofang.com              # 发送出去的邮件回复给谁
-#  tpl_file: "/xx/xx/xx.tpl"         # go template模板文件     tpl_file与content必须存在一个
-#  content: "xxx{{total}}xxxx"       # go template模板字符串
-#  theme: "xxxx"                     # 邮件主题
+  from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
+  reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁
 rules:              # 检查规则
   - name: test   # 没有规则必须有一个唯一的name
     index: gateway-*
@@ -50,7 +53,7 @@ rules:              # 检查规则
 #        url: http://baidu.com
       - type: mail                          # mail报警规则
         mail:                               # 该配置项参数与外层mail参数一致，该配置优先级高于外层mail配置
-          tpl_file: error_num.tpl         # go template模板文件     tpl_file与content必须存在一个
+          tpl_file: exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
 #          content: "xxx{{total}}xxxx"       # go template模板字符串
           subject: esalert test                     # 邮件主题
   - name: error_code
@@ -82,12 +85,10 @@ rules:              # 检查规则
     alerts:
       - type: mail
         mail:
-          tpl_file: tpl/error_code.tpl
+          tpl_file: code_range_count.tpl
           subject: error code agg
 ```
 
 # Futures
-* 更加完善的日志记录
-* 提供能多报警方式
-* 使每个运行的rule可管理并可灵活扩充
+* 使每个运行的rule可管理并可灵活扩充，能够将相关数据保留以便下次启动重用
 * 提供web界面

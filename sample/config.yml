@@ -1,0 +1,76 @@
+host: localhost      # es host
+port: 9200          # es port
+username: elastic   # es username
+password: changeme  # es password
+api:
+  enable: true
+  port: 3131
+  basic_auth:
+    enable: true
+    username: admin
+    password: 123456
+mail:
+  username: fudali4test@163.com
+  password: 1234567890abc
+  smtp_host: smtp.163.com
+  smtp_port: 25
+  send_to:
+    - fuyi@23mofang.com
+  from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
+  reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁
+rules:              # 检查规则
+#  - name: test   # 没有规则必须有一个唯一的name
+#    index: gateway-*
+#    body:
+#      query:
+#        bool:
+#          must:
+#          - exists:
+#              field: message.stack
+#          - range:
+#              "@timestamp":
+#                gte: now-3m
+#    # 默认会将查询获取的json数据易以`result`变量在脚本作用域内， 当该脚本返回true时执行报警
+#    script: >
+#            result.hits.total > 0
+#    interval:       # 隔多久发起一次请求，该字段会根据里面的语义信息转换时间
+#      m: 1
+#    alerts:                                  # 报警
+##      - type: http                          # http报警规则
+##        url: http://baidu.com
+#      - type: mail                          # mail报警规则
+#        mail:                               # 该配置项参数与外层mail参数一致，该配置优先级高于外层mail配置
+#          tpl_file: tpl/exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
+##          content: "xxx{{total}}xxxx"       # go template模板字符串
+#          subject: 错误异常堆栈提醒                    # 邮件主题
+#  - name: error_code
+#    index: gateway-*
+#    body:
+#      size: 0
+#      query:
+#        range:
+#          "@timestamp":
+#            gte: now-30m
+#      aggs:
+#        price_ranges:
+#          range:
+#            field: message.code
+#            ranges:
+#            - to: 1000
+#            - from: 1000
+#              to: 2000
+#            - from: 2000
+#              to: 4000
+#            - from: 4000
+#              to: 5000
+#            - from: 5000
+#              to: 6000
+#            - from: 6000
+#    script: true
+#    interval:
+#      m: 30
+#    alerts:
+#      - type: mail
+#        mail:
+#          tpl_file: tpl/code_range_count.tpl
+#          subject: error code agg
