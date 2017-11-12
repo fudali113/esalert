@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"mylog"
-	"config"
+	"util"
 )
 
 // HTTPAlert http 报警方式
@@ -26,6 +26,10 @@ func (httpAlert HTTPAlert) Alert(res map[string]interface{}) error {
 }
 
 // Create 。。。
-func (HTTPAlert) Create(config config.Config, alertConfig config.AlertConfig) (Alerter, error) {
-	return HTTPAlert{Url: alertConfig.URL}, nil
+func (HTTPAlert) GetAlerter(alertConfig map[string]interface{}) (alert interface{}, err error) {
+	return HTTPAlert{Url: util.GetMapString(alertConfig, "url", "")}, nil
+}
+
+func (httpAlert HTTPAlert) GetTypes() []string {
+	return []string{"http"}
 }

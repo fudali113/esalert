@@ -1,22 +1,22 @@
 name: 2000_4000_code_range_count   # 没有规则必须有一个唯一的name
-index: gateway-*
-body:
-  size: 0
-  query:
-    bool:
-      must:
-      - range:
-          message.code:
-            gte: 2000
-            lte: 4000
-      - range:
-          "@timestamp":
-            gte: now-1h
-  aggs:
-    code_count:
-      date_histogram:
-        field: "@timestamp"
-        interval: 5m
+storage:
+  body:
+    size: 0
+    query:
+      bool:
+        must:
+        - range:
+            message.code:
+              gte: 2000
+              lte: 4000
+        - range:
+            "@timestamp":
+              gte: now-1h
+    aggs:
+      code_count:
+        date_histogram:
+          field: "@timestamp"
+          interval: 5m
 # 默认会将查询获取的json数据易以`result`变量在脚本作用域内， 当该脚本返回true时执行报警
 script: >
   function need() {
@@ -29,23 +29,18 @@ script: >
       }
     }
     if (avg(counts) > 100) {
-      return maxNextMulti(counts) > 3;
+      return maxNextMulti(counts) > 2;
     } else {
-      return maxNextDiff(counts) > 1;
+      return maxNextDiff(counts) > 20;
     }
   }
   need()
 test:
-  should: true
+  should: false
   data: >
         {"_shards":{"failed":0,"successful":355,"total":355},"aggregations":{"code_count":{"buckets":[{"doc_count":3,"key":1510227300000,"key_as_string":"2017-11-09T11:35:00.000Z"},{"doc_count":5,"key":1510227600000,"key_as_string":"2017-11-09T11:40:00.000Z"},{"doc_count":2,"key":1510227900000,"key_as_string":"2017-11-09T11:45:00.000Z"},{"doc_count":0,"key":1510228200000,"key_as_string":"2017-11-09T11:50:00.000Z"},{"doc_count":4,"key":1510228500000,"key_as_string":"2017-11-09T11:55:00.000Z"},{"doc_count":0,"key":1510228800000,"key_as_string":"2017-11-09T12:00:00.000Z"},{"doc_count":1,"key":1510229100000,"key_as_string":"2017-11-09T12:05:00.000Z"},{"doc_count":4,"key":1510229400000,"key_as_string":"2017-11-09T12:10:00.000Z"},{"doc_count":1,"key":1510229700000,"key_as_string":"2017-11-09T12:15:00.000Z"},{"doc_count":2,"key":1510230000000,"key_as_string":"2017-11-09T12:20:00.000Z"},{"doc_count":2,"key":1510230300000,"key_as_string":"2017-11-09T12:25:00.000Z"},{"doc_count":6,"key":1510230600000,"key_as_string":"2017-11-09T12:30:00.000Z"}]}},"hits":{"hits":[],"max_score":0,"total":30},"timed_out":false,"took":76}
 interval:       # 隔多久发起一次请求，该字段会根据里面的语义信息转换时间
-  m: 1
+  m: 5
 alerts:                                  # 报警
-#      - type: http                          # http报警规则
-#        url: http://baidu.com
-  - type: mail                          # mail报警规则
-    mail:                               # 该配置项参数与外层mail参数一致，该配置优先级高于外层mail配置
-      tpl_file: sample/tpl/code_range_count.tpl         # go template模板文件     tpl_file与content必须存在一个
-#          content: "xxx{{total}}xxxx"       # go template模板字符串
-      subject: 错误码峰值提醒                    # 邮件主题
+  - tpl_file: sample/tpl/code_range_count.tpl         # go template模板文件     tpl_file与content必须存在一个
+    subject: 错误码峰值提醒                    # 邮件主题

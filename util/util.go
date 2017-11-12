@@ -3,10 +3,10 @@ package util
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/smtp"
 	"log"
+	"strings"
 )
 
 // ToBuffer 转换一个对象为byte[]
@@ -21,7 +21,7 @@ func ToBuffer(i interface{}) *bytes.Buffer {
 
 // QueryToJSON 转化query为json byte[]
 func QueryToJSON(query interface{}) ([]byte, error) {
-	query = cleanupMapValue(query)
+	query = CleanupMapValue(query)
 	return json.Marshal(query)
 }
 
@@ -52,40 +52,17 @@ func (mail Mail) Send(to []string, subject string, msg []byte) error {
 	return smtp.SendMail(server, auth, mail.From, to, bytes.Join([][]byte{contentType, from, replyTo, sub, msg}, []byte("\r\n")))
 }
 
-func cleanupInterfaceArray(in []interface{}) []interface{} {
-	res := make([]interface{}, len(in))
-	for i, v := range in {
-		res[i] = cleanupMapValue(v)
+// MergeMap 融合两个map
+func MergeMap(master, follow map[string]interface{}) map[string]interface{} {
+	for k, v := range master {
+		follow[k] = v
 	}
-	return res
+	return follow
 }
 
-func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
-	for k, v := range in {
-		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
+func BuildFileDir(dir string, name string) string {
+	if strings.HasSuffix(dir, "/") {
+		return dir + name
 	}
-	return res
-}
-
-func cleanupMapValue(v interface{}) interface{} {
-	switch v := v.(type) {
-	case []interface{}:
-		return cleanupInterfaceArray(v)
-	case map[interface{}]interface{}:
-		return cleanupInterfaceMap(v)
-	case map[string]interface{}:
-		return CleanupStringMap(v)
-	case string:
-		return v
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-func CleanupStringMap(in map[string]interface{}) map[string]interface{} {
-	for k, v := range in {
-		in[k] = cleanupMapValue(v)
-	}
-	return in
+	return dir + "/" + name
 }

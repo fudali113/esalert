@@ -27,6 +27,7 @@ func main() {
 	}
 	if res != ruleConfig.Test.Should {
 		mylog.Error("脚本运行结果与预期不一样")
+		return
 	}
 	mylog.Info("测试通过")
 }

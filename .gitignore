@@ -19,3 +19,7 @@ src
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+esalert
+check_rule
+esalert.tar.gz

@@ -11,10 +11,13 @@
 
 # 超级简单的配置
 ```yaml
-host: localhost      # es host
-port: 9200          # es port
-username: elastic   # es username
-password: changeme  # es password
+storage:
+  _type: es
+  host: localhost     # es host
+  port: 9200          # es port
+  username: elastic   # es username
+  password: changeme  # es password
+  index: gateway-*
 api:
   enable: true
   port: 3131
@@ -22,7 +25,8 @@ api:
     enable: true
     username: admin
     password: 123456
-mail:
+alert:
+  _type: mail             # alert type
   username: fudali4test@163.com
   password: 1234567890abc
   smtp_host: smtp.163.com
@@ -31,64 +35,35 @@ mail:
     - fuyi@23mofang.com
   from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
   reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁
-rules:              # 检查规则
-  - name: test   # 没有规则必须有一个唯一的name
-    index: gateway-*
-    body:
-      query:
-        bool:
-          must:
-          - exists:
-              field: message.serviceException
-          - range:
-              "@timestamp":
-                gte: now-30m
-    script: '''
-            res.hits.total > 10
-            '''        # 默认会将查询获取的json数据易以res变量在脚本作用域内， 当该脚本返回true时执行报警
+rules:              # 检查规则,支持在此字段配置或者专门的文件夹配置
+  - name: exists_stack_alert   # 没有规则必须有一个唯一的name
+    storage:
+      index: gateway-*
+      body:
+        query:
+          bool:
+            must:
+            - exists:
+                field: message.stack
+            - range:
+                "@timestamp":
+                  gte: now-2m
+    # 默认会将查询获取的json数据易以`result`变量在脚本作用域内， 当该脚本返回true时执行报警
+    script: >
+            result.hits.total > 0
     interval:       # 隔多久发起一次请求，该字段会根据里面的语义信息转换时间
-      minute: 30
+      m: 1
     alerts:                                  # 报警
-#      - type: http                          # http报警规则
-#        url: http://baidu.com
-      - type: mail                          # mail报警规则
-        mail:                               # 该配置项参数与外层mail参数一致，该配置优先级高于外层mail配置
-          tpl_file: exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
-#          content: "xxx{{total}}xxxx"       # go template模板字符串
-          subject: esalert test                     # 邮件主题
-  - name: error_code
-    index: gateway-*
-    body:
-      size: 0
-      query:
-        range:
-          "@timestamp":
-            gte: now-30m
-      aggs:
-        price_ranges:
-          range:
-            field: message.code
-            ranges:
-            - to: 1000
-            - from: 1000
-              to: 2000
-            - from: 2000
-              to: 4000
-            - from: 4000
-              to: 5000
-            - from: 5000
-              to: 6000
-            - from: 6000
-    script: true
-    interval:
-      minute: 30
-    alerts:
-      - type: mail
-        mail:
-          tpl_file: code_range_count.tpl
-          subject: error code agg
+      - tpl_file: sample/tpl/exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
+        content: "xxx{{total}}xxxx"                 # go template模板字符串
+        subject: 错误异常堆栈提醒                     # 邮件主题
+        send_to:
+          - fuyi@23mofang.com
+
 ```
 
 # Futures
-* 使每个运行的rule可管理并可灵活扩充，能够将相关数据保留以便下次启动重用
+* 更加完善的日志记录
+* 提供能多报警方式
+* 使每个运行的rule可管理并可灵活扩充
 * 提供web界面

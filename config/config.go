@@ -3,8 +3,9 @@ package config
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"strings"
 	"mylog"
+	"util"
+	"fmt"
 )
 
 type ConfigDirInfo struct {
@@ -15,13 +16,24 @@ type ConfigDirInfo struct {
 
 // Config 全部配置
 type Config struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	Rules    []RuleConfig
-	Mail     MailConfig
-	ApiInfo  ApiConfig `yaml:"api"`
+	Storage map[string]interface{}
+	Rules   []RuleConfig
+	Alert   map[string]interface{}
+	ApiInfo ApiConfig `yaml:"api"`
+	Test    bool
+}
+
+// Valid 验证config信息
+// TODO 更详细的验证信息
+func (config Config) Valid() error {
+	ruleNameMap := map[string]int{}
+	for _, rule := range config.Rules {
+		if _, ok := ruleNameMap[rule.Name]; ok {
+			return fmt.Errorf("rule name 必须唯一，出现了两个相同name 的 rule: %s", rule.Name)
+		}
+		ruleNameMap[rule.Name] = 1
+	}
+	return nil
 }
 
 type ApiConfig struct {
@@ -39,12 +51,12 @@ type BasicAuthConfig struct {
 // RuleConfig 规则配置
 type RuleConfig struct {
 	Name     string
-	Index    string
-	Body     map[string]interface{}
+	Status   int
+	Storage  map[string]interface{}
 	Script   string
 	Test     TestRuleData
 	Interval Time
-	Alerts   []AlertConfig
+	Alerts   []map[string]interface{}
 }
 
 type TestRuleData struct {
@@ -78,44 +90,27 @@ func (t Time) GetSecond() int32 {
 	return second
 }
 
-// AlertConfig 报警配置
-type AlertConfig struct {
-	Type string
-	URL  string `yaml:"Url"`
-	Mail MailConfig
-}
-
-// MailConfig 邮箱信息配置
-type MailConfig struct {
-	Username string
-	Password string
-	SMTPHost string   `yaml:"smtp_host"`
-	SMTPPort string   `yaml:"smtp_port"`
-	SendTo   []string `yaml:"send_to"`
-	FromAddr string   `yaml:"from_addr"`
-	ReplyTo  string   `yaml:"reply_to"`
-	TPLFile  string   `yaml:"tpl_file"`
-	Content  string
-	Subject  string
-}
-
 var (
 	OriginConfig *Config
 )
 
 // IntiConfig 根据配置文件路径加载配置
 func IntiConfig(configDirInfo ConfigDirInfo) (config *Config, err error) {
-	bytes, err := ioutil.ReadFile(buildFileDir(configDirInfo.Dir, configDirInfo.ConfigName))
+	bytes, err := ioutil.ReadFile(util.BuildFileDir(configDirInfo.Dir, configDirInfo.ConfigName))
 	if err != nil {
 		return nil, err
 	}
 	config = &Config{
-		Host:     "localhsot",
-		Port:     "9200",
-		Username: "elastic",
-		Password: "changeme",
-		Rules:    []RuleConfig{},
+		Storage: map[string]interface{}{
+			"host":     "localhsot",
+			"port":     "9200",
+			"username": "elastic",
+			"password": "changeme",
+		},
+		Rules: []RuleConfig{},
 	}
+	util.CleanupMapValue(config.Storage)
+	util.CleanupMapValue(config.Alert)
 	// 保留原始配置
 	defer func() {
 		OriginConfig = config
@@ -124,7 +119,7 @@ func IntiConfig(configDirInfo ConfigDirInfo) (config *Config, err error) {
 	if err != nil {
 		return nil, err
 	}
-	ruleDir := buildFileDir(configDirInfo.Dir, configDirInfo.RuleName)
+	ruleDir := util.BuildFileDir(configDirInfo.Dir, configDirInfo.RuleName)
 	rulesFile, err := ioutil.ReadDir(ruleDir)
 	if err != nil {
 		mylog.Info("打开规则文件"+ruleDir+"夹出错", err)
@@ -133,7 +128,7 @@ func IntiConfig(configDirInfo ConfigDirInfo) (config *Config, err error) {
 	rules := []RuleConfig{}
 	for _, ruleFile := range rulesFile {
 		if !ruleFile.IsDir() {
-			rule, err := GetRuleConfig(buildFileDir(ruleDir, ruleFile.Name()))
+			rule, err := GetRuleConfig(util.BuildFileDir(ruleDir, ruleFile.Name()))
 			if err != nil {
 				mylog.Error(err)
 				continue
@@ -142,25 +137,24 @@ func IntiConfig(configDirInfo ConfigDirInfo) (config *Config, err error) {
 		}
 	}
 	config.Rules = append(config.Rules, rules...)
+	for _, rule := range config.Rules {
+		rule.Storage = util.CleanupStringMap(rule.Storage)
+		for i, alert := range rule.Alerts {
+			rule.Alerts[i] = util.CleanupStringMap(alert)
+		}
+	}
 	if len(rules) == 0 {
 		return config, ConfigError{"规则数不能为0"}
 	}
-	return config, nil
+	return config, config.Valid()
 }
 
 func GetRuleConfig(ruleDir string) (RuleConfig, error) {
-	rule := RuleConfig{}
+	rule := RuleConfig{Storage: map[string]interface{}{}, Alerts: []map[string]interface{}{}}
 	bytes, err := ioutil.ReadFile(ruleDir)
 	if err != nil {
 		return RuleConfig{}, err
 	}
 	yaml.Unmarshal(bytes, &rule)
 	return rule, nil
-}
-
-func buildFileDir(dir string, name string) string {
-	if strings.HasSuffix(dir, "/") {
-		return dir + name
-	}
-	return dir + "/" + name
 }

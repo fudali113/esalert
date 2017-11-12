@@ -15,10 +15,10 @@ func Test_IntiConfig(t *testing.T) {
 		t.Error("解析出错")
 	}
 	for _, rule := range config.Rules {
-		if rule.Body == nil {
+		if rule.Storage == nil {
 			t.Error("解析出错")
 		}
-		json, err := util.QueryToJSON(rule.Body)
+		json, err := util.QueryToJSON(rule.Storage)
 		mylog.Info(string(json), err)
 	}
 

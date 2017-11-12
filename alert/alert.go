@@ -3,19 +3,28 @@ package alert
 import (
 	"strings"
 	"mylog"
-	"config"
+	"fmt"
 )
 
 var registerMap = map[string]AlerterCreater{}
 
 // Register 注册一个AlerterCreater
-func Register(t string, creater AlerterCreater) {
-	t = strings.ToLower(t)
-	_, ok := registerMap[t]
-	if ok {
-		mylog.Warn("已经存在一个该type的creater")
+func Register(creater AlerterCreater) {
+	names := creater.GetTypes()
+	alerter, _ := creater.GetAlerter(map[string]interface{}{})
+	if alerter == nil {
+		panic(fmt.Errorf("config 参数为空时必须返回一个不为nil的Alerter对象"))
 	}
-	registerMap[t] = creater
+	if _, ok := alerter.(Alerter); !ok {
+		panic(fmt.Errorf("返回的类型必须是Alerter类型"))
+	}
+	for _, name := range names {
+		name = strings.ToLower(name)
+		if _, ok := registerMap[name]; ok {
+			mylog.Warn("已经存在一个该type的alerter creater, type: " + name)
+		}
+		registerMap[name] = creater
+	}
 }
 
 // GetCreater 获取一个AlerterCreater
@@ -29,18 +38,26 @@ func GetCreater(t string) (AlerterCreater, error) {
 }
 
 // CreateAlerter 根据type生成一个Alerter
-func CreateAlerter(t string, config config.Config, alertConfig config.AlertConfig) (Alerter, error) {
-	creater, err := GetCreater(t)
+func CreateAlerter(alertConfig map[string]interface{}) (Alerter, error) {
+	alertType, ok := alertConfig["_type"]
+	if !ok {
+		alertType = "default"
+	}
+	creater, err := GetCreater(alertType.(string))
 	if err != nil {
 		return nil, err
 	}
-	return creater.Create(config, alertConfig)
+	aleter, err := creater.GetAlerter(alertConfig)
+	if err != nil {
+		return nil, err
+	}
+	return aleter.(Alerter), nil
 }
 
 func init() {
-	Register("log", LogAlert{})
-	Register("http", HTTPAlert{})
-	Register("mail", MailAlert{})
+	Register(LogAlert{})
+	Register(HTTPAlert{})
+	Register(MailAlert{})
 }
 
 // Alerter 报警方式处理接口
@@ -52,6 +69,7 @@ type Alerter interface {
 // AlerterCreater 产生者
 // 将产生逻辑规定到Alert的出生地
 type AlerterCreater interface {
+	GetTypes() []string
 	// Create 根据config生成一个alert
-	Create(config config.Config, alertConfig config.AlertConfig) (Alerter, error)
+	GetAlerter(alertConfig map[string]interface{}) (interface{}, error)
 }

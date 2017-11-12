@@ -1,24 +1,25 @@
 name: exists_stack_alert   # 没有规则必须有一个唯一的name
-index: gateway-*
-body:
-  query:
-    bool:
-      must:
-      - exists:
-          field: message.stack
-      - range:
-          "@timestamp":
-            gte: now-2m
+storage:
+  index: gateway-*
+  body:
+    query:
+      bool:
+        must:
+        - exists:
+            field: message.stack
+        - range:
+            "@timestamp":
+              gte: now-2m
 # 默认会将查询获取的json数据易以`result`变量在脚本作用域内， 当该脚本返回true时执行报警
 script: >
         result.hits.total > 0
 interval:       # 隔多久发起一次请求，该字段会根据里面的语义信息转换时间
   m: 1
 alerts:                                  # 报警
-#      - type: http                          # http报警规则
+#      - type: http                      # http报警规则
 #        url: http://baidu.com
-  - type: mail                          # mail报警规则
-    mail:                               # 该配置项参数与外层mail参数一致，该配置优先级高于外层mail配置
-      tpl_file: sample/tpl/exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
-#          content: "xxx{{total}}xxxx"       # go template模板字符串
-      subject: 错误异常堆栈提醒                    # 邮件主题
+  - tpl_file: sample/tpl/exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
+    content: "xxx{{total}}xxxx"                 # go template模板字符串
+    subject: 错误异常堆栈提醒                     # 邮件主题
+    send_to:
+      - fuyi@23mofang.com

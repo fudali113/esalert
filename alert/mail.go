@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"config"
 	"bytes"
 	"io/ioutil"
 	"util"
@@ -25,64 +24,47 @@ func (mailAlert MailAlert) Alert(res map[string]interface{}) error {
 }
 
 // Create 。。。
-func (MailAlert) Create(config config.Config, alertConfig config.AlertConfig) (Alerter, error) {
-	mail := merge(alertConfig.Mail, config.Mail)
-	var err error
+func (MailAlert) GetAlerter(alertConfig map[string]interface{}) (alert interface{}, err error) {
+	alert = MailAlert{}
 	var template *template.Template
-	content := ""
-	if mail.TPLFile == "" {
-		if mail.Content == "" {
-			return nil, ConfigError{Message: "tpl_file || content must exists by Mail"}
+	content := util.GetMapString(alertConfig, "content", "")
+	tplFile := util.GetMapString(alertConfig, "tpl_file", "")
+	if tplFile == "" {
+		if util.GetMapString(alertConfig, "content", "") == "" {
+			err = ConfigError{Message: "tpl_file || content must exists by Mail"}
+			return
 		}
-		content = mail.Content
-		template, err = template.Parse(mail.Content)
+		template, err = template.Parse(content)
 		if err != nil {
-			return nil, err
+			return
 		}
 	} else {
-		template, err = template.ParseFiles(mail.TPLFile)
+		template, err = template.ParseFiles(tplFile)
 		if err != nil {
-			return nil, err
+			return
 		}
-		bytes, err := ioutil.ReadFile(mail.TPLFile)
+		bytes, err := ioutil.ReadFile(tplFile)
 		if err == nil {
 			content = string(bytes)
 		}
 	}
-	return MailAlert{
+	alert = MailAlert{
 		Mail: util.Mail{
-			Host:     mail.SMTPHost,
-			Port:     mail.SMTPPort,
-			Username: mail.Username,
-			Password: mail.Password,
-			From:     mail.FromAddr,
-			ReplyTo:  mail.ReplyTo,
+			Host:     util.GetMapString(alertConfig, "smtp_host", ""),
+			Port:     util.GetMapString(alertConfig, "smtp_port", ""),
+			Username: util.GetMapString(alertConfig, "username", ""),
+			Password: util.GetMapString(alertConfig, "password", ""),
+			From:     util.GetMapString(alertConfig, "from_addr", ""),
+			ReplyTo:  util.GetMapString(alertConfig, "reply_to", ""),
 		},
-		To:       mail.SendTo,
-		Subject:  mail.Subject,
+		To:       util.GetMapStringSlice(alertConfig, "send_to", []string{}),
+		Subject:  util.GetMapString(alertConfig, "subject", ""),
 		Content:  content,
 		template: template,
-	}, nil
+	}
+	return
 }
 
-func merge(base config.MailConfig, config config.MailConfig) config.MailConfig {
-	if base.Username == "" {
-		base.Username = config.Username
-	}
-	if base.Password == "" {
-		base.Password = config.Password
-	}
-	if base.SMTPHost == "" {
-		base.SMTPHost = config.SMTPHost
-	}
-	if base.SMTPPort == "" {
-		base.SMTPPort = config.SMTPPort
-	}
-	if len(base.SendTo) == 0 {
-		base.SendTo = config.SendTo
-	}
-	if base.FromAddr == "" {
-		base.FromAddr = config.FromAddr
-	}
-	return base
+func (mailAlert MailAlert) GetTypes() []string {
+	return []string{"mail"}
 }

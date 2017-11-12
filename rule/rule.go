@@ -9,7 +9,8 @@ import (
 	"mylog"
 	"javascript"
 	"alert"
-	"source"
+	"storage"
+	"config"
 )
 
 type Rule interface {
@@ -17,13 +18,17 @@ type Rule interface {
 	Run(ctx context.Context)
 }
 
+func CreateRule(con config.RuleConfig) Rule {
+	return nil
+}
+
 type SampleRule struct {
-	Name      string
-	EsRequest source.EsRequest
-	Tick      *time.Ticker
-	Time      int32
-	Script    string
-	Alerter   []alert.Alerter
+	Name    string
+	Storage storage.Storage
+	Tick    *time.Ticker
+	Time    int32
+	Script  string
+	Alerter []alert.Alerter
 }
 
 func (rule SampleRule) GetName() string {
@@ -32,8 +37,8 @@ func (rule SampleRule) GetName() string {
 
 func (rule SampleRule) Run(ctx context.Context) {
 	runFunc := func() {
-		mylog.Info(fmt.Sprintf("Rule: %s runing", rule.Name))
-		res, err := rule.EsRequest.RunQuery()
+		mylog.Info(fmt.Sprintf("rule: %s runing", rule.Name))
+		res, err := rule.Storage.GetData()
 		if err != nil {
 			mylog.Error(err)
 			return
@@ -55,7 +60,7 @@ func (rule SampleRule) Run(ctx context.Context) {
 				}
 			}
 		}
-		mylog.Info(fmt.Sprintf("Rule: %s Run success", rule.Name))
+		mylog.Info(fmt.Sprintf("rule: %s Run success", rule.Name))
 	}
 	go func() {
 		runFunc()
@@ -66,8 +71,8 @@ func (rule SampleRule) Run(ctx context.Context) {
 			case <-rule.Tick.C:
 				runFunc()
 			case <-ctx.Done():
-				mylog.Info(fmt.Sprintf("Rule: %s stoped", rule.Name))
-				break
+				mylog.Info(fmt.Sprintf("rule: %s stoped", rule.Name))
+				return
 			}
 		}
 	}()

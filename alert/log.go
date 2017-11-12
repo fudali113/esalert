@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"config"
 	"mylog"
 )
 
@@ -16,6 +15,10 @@ func (LogAlert) Alert(res map[string]interface{}) error {
 }
 
 // Create 。。。
-func (LogAlert) Create(config config.Config, alertConfig config.AlertConfig) (Alerter, error) {
+func (LogAlert) GetAlerter(map[string]interface{}) (interface{}, error) {
 	return LogAlert{}, nil
+}
+
+func (LogAlert) GetTypes() []string {
+	return []string{"log", "default"}
 }
