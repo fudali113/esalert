@@ -36,6 +36,8 @@ func Start(config config.ApiConfig) {
 	handler.Post("r:/api/context/[\\S\\s]+/stop", createHandleFunc(ruleStop, basicAuthMedia))
 	handler.Post("r:/api/context/[\\S\\s]+/start", createHandleFunc(ruleStart, basicAuthMedia))
 	handler.Post("r:/api/context/[\\S\\s]+/restart", createHandleFunc(ruleRestart, basicAuthMedia))
+	// 静态文件处理
+	handler.Get("r:/[\\s\\S]*", createHandle(http.FileServer(http.Dir("./static/")), basicAuthMedia))
 
 	go func() {
 		err := http.ListenAndServe(":"+config.Port, handler)

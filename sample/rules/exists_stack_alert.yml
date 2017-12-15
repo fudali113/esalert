@@ -1,4 +1,5 @@
 name: exists_stack_alert   # 没有规则必须有一个唯一的name
+status: 1
 storage:
   index: gateway-*
   body:

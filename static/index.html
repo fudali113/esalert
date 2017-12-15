@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>esalert</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body style="margin: auto">
+
+<div id="app">
+    <el-container>
+        <!-- Form -->
+        <el-header>
+            <!-- Form -->
+            <el-row :gutter="20">
+                <el-col :span="23">
+                    <div class="grid-content bg-purple">
+                        esalert
+                    </div>
+                </el-col>
+                <el-col :span="1">
+                    <div class="grid-content bg-purple">
+                        <i @click="dialogFormVisible = true" class="el-icon-setting"></i>
+                    </div>
+                </el-col>
+            </el-row>
+            <el-dialog title="Basic Auth" :visible.sync="dialogFormVisible">
+                <el-form :model="form">
+                    <el-form-item label="Username:  " :label-width="formLabelWidth">
+                        <el-input v-model="form.username" auto-complete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Password:  " :label-width="formLabelWidth">
+                        <el-input v-model="form.password" auto-complete="off"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button @click="dialogFormVisible = false">cancel</el-button>
+                    <el-button type="primary" @click="dialogFormVisible = false">confirm</el-button>
+                </div>
+            </el-dialog>
+        </el-header>
+        <el-container>
+                <el-menu
+                        default-active="2"
+                        class="el-menu-vertical-demo"
+                        @open="handleOpen"
+                        @close="handleClose">
+                    <el-menu-item index="2">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">Rules</span>
+                    </el-menu-item>
+                    <el-menu-item index="3">
+                        <i class="el-icon-setting"></i>
+                        <span slot="title">Config</span>
+                    </el-menu-item>
+                </el-menu>
+
+            <el-main>
+                <el-collapse accordion>
+                    <el-collapse-item v-for="item in res.Rules" :key="item.id" v-bind:title="item.Name" v-bind:name="item.Name">
+                        <textarea class="textarea" v-bind:value="JSON.stringify(item, null, '\t')" rows="20"></textarea>
+                    </el-collapse-item>
+                </el-collapse>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+
+</body>
+
+<style>
+    .textarea {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 14px;
+        line-height: 20px;
+    }
+    .el-header {
+        background-color: #50bfff;
+        color: #333;
+        text-align: center;
+        padding-top: 20px;
+    }
+</style>
+
+<!-- 先引入 Vue -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://cdn.bootcss.com/vue-resource/1.3.4/vue-resource.min.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            dialogTableVisible: false,
+            dialogFormVisible: false,
+            form: {
+                username: '',
+                password: ''
+            },
+            formLabelWidth: '120px',
+            res: {
+                Alert: {},
+                ApiInfo: {},
+                Rules: [],
+                Storage: {}
+            }
+        },
+        mounted: function() {
+            this.loadConfig()
+        },
+        methods: {
+            loadConfig: function () {
+                var vue = this
+                this.$http.get("/api/config").then(function (response) {
+                    response.json().then(function (data) {
+                        vue.res = data
+                        var a = 1
+                        console.log(vue)
+                    })
+                }).catch(function (reason) {
+                    console.log(reason)
+                })
+            }
+        }
+    })
+</script>
+</html>

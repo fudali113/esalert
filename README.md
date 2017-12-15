@@ -13,7 +13,7 @@
 ```yaml
 storage:
   _type: es
-  host: localhost     # es host
+  host: localhost      # es host
   port: 9200          # es port
   username: elastic   # es username
   password: changeme  # es password
@@ -32,7 +32,7 @@ alert:
   smtp_host: smtp.163.com
   smtp_port: 25
   send_to:
-    - fuyi@23mofang.com
+    - fudali4test@163.com
   from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
   reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁
 rules:              # 检查规则,支持在此字段配置或者专门的文件夹配置
@@ -54,6 +54,8 @@ rules:              # 检查规则,支持在此字段配置或者专门的文件
     interval:       # 隔多久发起一次请求，该字段会根据里面的语义信息转换时间
       m: 1
     alerts:                                  # 报警
+    #      - type: http                      # http报警规则
+    #        url: http://baidu.com
       - tpl_file: sample/tpl/exists_stack_alert.tpl         # go template模板文件     tpl_file与content必须存在一个
         content: "xxx{{total}}xxxx"                 # go template模板字符串
         subject: 错误异常堆栈提醒                     # 邮件主题

@@ -1,6 +1,6 @@
 storage:
   _type: es
-  host: localhost     # es host
+  host: localhost      # es host
   port: 9200          # es port
   username: elastic   # es username
   password: changeme  # es password
@@ -19,6 +19,6 @@ alert:
   smtp_host: smtp.163.com
   smtp_port: 25
   send_to:
-    - fuyi@23mofang.com
+    - fudali4test@163.com
   from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
   reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁

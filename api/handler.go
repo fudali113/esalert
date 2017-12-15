@@ -8,14 +8,14 @@ import (
 
 var defaultMedias = []media{}
 
-type restFuncMap map[string]http.HandlerFunc
+type restFuncMap map[string]http.Handler
 
-func (rest restFuncMap) Get(method string) http.HandlerFunc {
-	if handleFunc, ok := rest[method]; ok {
-		return handleFunc
+func (rest restFuncMap) Get(method string) http.Handler {
+	if handle, ok := rest[method]; ok {
+		return handle
 	}
-	if handleFunc, ok := rest[""]; ok {
-		return handleFunc
+	if handle, ok := rest[""]; ok {
+		return handle
 	}
 	return nil
 }
@@ -32,28 +32,28 @@ type RestHandler struct {
 }
 
 // Get 注册GET方法处理器
-func (rest *RestHandler) Get(url string, handlerFunc http.HandlerFunc) {
-	rest.Add("get", url, handlerFunc)
+func (rest *RestHandler) Get(url string, handler http.Handler) {
+	rest.Add("get", url, handler)
 }
 
 // Post 注册POST方法处理器
-func (rest *RestHandler) Post(url string, handlerFunc http.HandlerFunc) {
-	rest.Add("post", url, handlerFunc)
+func (rest *RestHandler) Post(url string, handler http.Handler) {
+	rest.Add("post", url, handler)
 }
 
 // Put 注册PUT方法处理器
-func (rest *RestHandler) Put(url string, handlerFunc http.HandlerFunc) {
-	rest.Add("put", url, handlerFunc)
+func (rest *RestHandler) Put(url string, handler http.Handler) {
+	rest.Add("put", url, handler)
 }
 
 // Delete 注册DELETE方法处理器
-func (rest *RestHandler) Delete(url string, handlerFunc http.HandlerFunc) {
-	rest.Add("delete", url, handlerFunc)
+func (rest *RestHandler) Delete(url string, handler http.Handler) {
+	rest.Add("delete", url, handler)
 }
 
 // Add 注册GET方法处理器
 // 如果url以`r:`开头，说明是一个正则表达式路径
-func (rest *RestHandler) Add(method, url string, handlerFunc http.HandlerFunc) {
+func (rest *RestHandler) Add(method, url string, handlerFunc http.Handler) {
 	if strings.HasPrefix(url, "r:") {
 		url := strings.TrimPrefix(url, "r:")
 		if rest.regex == nil {
@@ -90,9 +90,9 @@ func (rest *RestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	method := strings.ToLower(r.Method)
 	findButNotMatchMethod := false
 	if restMap, ok := rest.normal[url]; ok {
-		handleFunc := restMap.Get(method)
-		if handleFunc != nil {
-			handleFunc(w, r)
+		handle := restMap.Get(method)
+		if handle != nil {
+			handle.ServeHTTP(w, r)
 			return
 		} else {
 			findButNotMatchMethod = true
@@ -100,9 +100,9 @@ func (rest *RestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, regexFunc := range rest.regex {
 		if regexFunc.regex.MatchString(url) {
-			handleFunc := regexFunc.rest.Get(method)
-			if handleFunc != nil {
-				handleFunc(w, r)
+			handle := regexFunc.rest.Get(method)
+			if handle != nil {
+				handle.ServeHTTP(w, r)
 				return
 			} else {
 				findButNotMatchMethod = true
@@ -131,6 +131,20 @@ func createHandleFunc(handler HandlerFunc, medias ...media) http.HandlerFunc {
 			}
 		}
 		handler(ctx)
+	}
+}
+
+func createHandle(handler http.Handler, medias ...media) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := Context{w: w, r: r}
+		for _, media := range medias {
+			err := media(ctx)
+			if err != nil {
+				ctx.WriteString(err.Error())
+				return
+			}
+		}
+		handler.ServeHTTP(w, r)
 	}
 }
 

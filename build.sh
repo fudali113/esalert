@@ -3,7 +3,7 @@
 export TMP_DIR=/tmp/esalert-temp
 mkdir $TMP_DIR
 
-cp -rf sample $TMP_DIR
+cp -rf sample static $TMP_DIR
 
 go build esalert.go
 go build check_rule.go
