@@ -13,7 +13,7 @@
 ```yaml
 storage:
   _type: es
-  host: localhost      # es host
+  host: localhost     # es host
   port: 9200          # es port
   username: elastic   # es username
   password: changeme  # es password
@@ -33,11 +33,11 @@ alert:
   smtp_port: 25
   send_to:
     - fudali4test@163.com
-  from_addr: fudali4test@163.com             # 显示发送出去的用户是谁
-  reply_to: fudali4test@163.com              # 发送出去的邮件回复给谁
-rules:              # 检查规则,支持在此字段配置或者专门的文件夹配置
-  - name: exists_stack_alert   # 没有规则必须有一个唯一的name
-    storage:
+  from_addr: fudali4test@163.com             # this email from who
+  reply_to: fudali4test@163.com              # this email rrply to who
+rules:              # rule policy 
+  - name: exists_stack_alert   # rule name , must unique
+    storage: 
       index: gateway-*
       body:
         query:
@@ -65,7 +65,16 @@ rules:              # 检查规则,支持在此字段配置或者专门的文件
 ```
 
 # Futures
-* 更加完善的日志记录
-* 提供能多报警方式
-* 使每个运行的rule可管理并可灵活扩充
-* 提供web界面
+* optimize log
+* more alerter
+* rule manager
+* support web ui
+
+# build
+```
+git clone github.com/fudali113/esalert esalert/src
+build: 
+GOPATH=./esalert ./build.sh
+run:
+GOPATH=./esalert go run esalert.go
+```
