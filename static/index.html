@@ -41,24 +41,32 @@
             </el-dialog>
         </el-header>
         <el-container>
-                <el-menu
-                        default-active="2"
-                        class="el-menu-vertical-demo"
-                        @open="handleOpen"
-                        @close="handleClose">
-                    <el-menu-item index="2">
-                        <i class="el-icon-menu"></i>
-                        <span slot="title">Rules</span>
-                    </el-menu-item>
-                    <el-menu-item index="3">
-                        <i class="el-icon-setting"></i>
-                        <span slot="title">Config</span>
-                    </el-menu-item>
-                </el-menu>
+            <el-menu default-active="1" class="el-menu-vertical-demo">
+                <el-menu-item index="1">
+                    <i class="el-icon-menu"></i>
+                    <span slot="title">Rules</span>
+                </el-menu-item>
+                <el-menu-item index="2">
+                    <i class="el-icon-setting"></i>
+                    <span slot="title">Config</span>
+                </el-menu-item>
+            </el-menu>
 
             <el-main>
                 <el-collapse accordion>
                     <el-collapse-item v-for="item in res.Rules" :key="item.id" v-bind:title="item.Name" v-bind:name="item.Name">
+                        <template slot="title">
+                            <el-row type="flex" class="row-bg" justify="space-between">
+                              <el-col :span="6"><span class="title">{{item.Name}}</span></el-col>
+                              <el-col :span="3">
+                                <el-button-group>
+                                  <el-button v-on:click.stop="click" type="primary" size="mini" icon="el-icon-d-arrow-right"></el-button>
+                                  <el-button v-on:click.stop="click" type="primary" size="mini" icon="el-icon-edit"></el-button>
+                                  <el-button v-on:click.stop="click" type="primary" size="mini" icon="el-icon-delete"></el-button>
+                                </el-button-group>
+                              </el-col>
+                            </el-row>
+                        </template>
                         <textarea class="textarea" v-bind:value="JSON.stringify(item, null, '\t')" rows="20"></textarea>
                     </el-collapse-item>
                 </el-collapse>
@@ -70,17 +78,23 @@
 </body>
 
 <style>
+    .el-header {
+        padding-top: 20px;
+        font-size: 20px;
+        text-align: center;
+        color: #fff;
+        background-color: #50bfff;
+    }
+    .title {
+        font-size: 18px;
+    }
     .textarea {
         width: 100%;
+        padding: 15px;
         box-sizing: border-box;
         font-size: 14px;
         line-height: 20px;
-    }
-    .el-header {
-        background-color: #50bfff;
-        color: #333;
-        text-align: center;
-        padding-top: 20px;
+        color: #666;
     }
 </style>
 
@@ -111,6 +125,9 @@
             this.loadConfig()
         },
         methods: {
+            click: function() {
+                alert(1);
+            },
             loadConfig: function () {
                 var vue = this
                 this.$http.get("/api/config").then(function (response) {
