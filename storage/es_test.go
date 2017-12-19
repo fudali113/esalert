@@ -24,10 +24,4 @@ func TestEsRequest_RunQuery(t *testing.T) {
 	if err != nil {
 		t.Error(res, err)
 	}
-	// if hits.Total < 10 {
-	// 	t.Fail()
-	// }
-	if err != nil {
-		t.Error(err)
-	}
 }

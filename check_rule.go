@@ -8,7 +8,7 @@ import (
 	"rule"
 )
 
-func main() {
+func checkRule() {
 	var ruleDir string
 	flag.StringVar(&ruleDir, "ruleDir", "./sample/rules/2000_4000_code_range_count.yml", "配置文件所在目录")
 

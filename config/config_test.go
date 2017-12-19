@@ -7,7 +7,7 @@ import (
 )
 
 func Test_IntiConfig(t *testing.T) {
-	config, err := IntiConfig(ConfigDirInfo{Dir: "../sample", RuleName: "rules", ConfigName: "sample.yml"})
+	config, err := IntiConfig(ConfigDirInfo{Dir: "../sample", RuleName: "rules", ConfigName: "config.yml"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -21,5 +21,4 @@ func Test_IntiConfig(t *testing.T) {
 		json, err := util.QueryToJSON(rule.Storage)
 		mylog.Info(string(json), err)
 	}
-
 }
