@@ -12,8 +12,8 @@ var (
 		Host:     "smtp.exmail.qq.com",
 		Port:     "25",
 		Username: "***",
-		Password: "fudali133B",
-		ReplyTo:  "fuyi@23mofang.com",
+		Password: "***",
+		ReplyTo:  "fudali113@example.com",
 	}
 	SendTo = []string{"fuyi@23mofang.com"}*/
 )
